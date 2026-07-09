@@ -1,21 +1,71 @@
-# EPA Open Source Reference
 
-## Brief Project Description
+# Purpose/Overview
 
-This repository contains files for teams to reuse when working in and with EPA Open Source projects.
+The code IDOSE estimates organ-specific inhalation dose coefficients for a selected radionuclide, age, and lung absorption type adjusted for a given aerosol particle size. Total effective dose is calculated as a combination of target organ dose and tissue weighting factors. The total effective dose includes regular target organs and an estimate of dose from a group of remainder tissues. Dose is adjusted for aerosol particle size deposition in multiple regions of the respiratory tract, which affects different target organs. 
 
-Also, this repository contains the link to [EPA's System Lifecycle Management Policy and Procedure](https://www.epa.gov/irmpoli8/policy-procedures-and-guidance-system-life-cycle-management-slcm) which lays out EPA's Open Source Software Policy and [EPA's Open Source Code Guidance](https://www.epa.gov/developers/open-source-software-and-epa-code-repository-requirements). 
+## User provided input
 
-## For EPA Teams
+- Radionuclide (e.g., Sr-85)
+- Lung absorption type (fast/medium/slow absorption: F/M/S)
+- Age in days (e.g., 7300 ≈ adult)
+- Aerosol aerodynamic diameter (default is 1.0 µm) 
 
-For EPA Teams, we have guidance on how EPA puts our open source software policies into practice on GitHub. Read [EPA's GitHub Guidance.](https://www.epa.gov/webguide/github-guidance)
+## Standard program inputs
 
-[EPA's Open Source Project repo](https://github.com/USEPA/open-source-projects) is for EPA teams to reuse file for properly maintaining their open source project. All projects must include a readme.md, license.md, contributing.md file and the disclaimer below.   
+- Tissue weighting factors for organs (`namelist_regular.txt`)
+- Organ masses for the “remainder tissues” calculation (`namelist_remainder.txt`)
+- Aerosol size factors by respiratory region and age (`DC_PAK3.DEP`)
+- Nine “region” HDB files from FGR13 with base per-organ dose coefficients for the selected nuclide/age/absorption type combination, one file per respiratory region:
+  - `AI.HDB`
+  - `BBE-GEL.HDB`
+  - `BBE-SOL.HDB`
+  - `BBE-SEQ.HDB`
+  - `BBI-GEL.HDB`
+  - `BBI-SOL.HDB`
+  - `BBI-SEQ.HDB`
+  - `ET1.HDB`
+  - `ET2.HDB` 
 
-### Credits
+## Outputs
 
-This repository reused material from [GSA](https://www.gsa.gov/), [18F](https://18f.gsa.gov/) , [Lawrence Livermore National Lab](https://www.llnl.gov/), and from the [Consumer Financial Protection Bureau's policy](https://github.com/cfpb/source-code-policy).
+- A table of target organ inhalation dose coefficients
+- A table of nuclide-specific inhalation total effective dose for the fast, medium, and slow lung absorption types 
 
-### Disclaimer
+# Inhalation dose calculation approach
 
-The United States Environmental Protection Agency (EPA) GitHub project code is provided on an "as is" basis and the user assumes responsibility for its use.  EPA has relinquished control of the information and no longer has responsibility to protect the integrity , confidentiality, or availability of the information.  Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation or favoring by EPA.  The EPA seal and logo shall not be used in any manner to imply endorsement of any commercial product or activity by EPA or the United States Government.
+### 1. Initialize and select inputs
+
+Set the nuclide, age, aerosol size, and an intake type guess if one has not been set. 
+
+### 2. Read tissue weights and remainder masses
+
+Load per-organ tissue weighting factors, which are used later to compute effective dose.  
+Load per-organ masses used when computing the “remainder tissues” dose. 
+
+### 3. Read aerosol size factors and pick the closest particle size bin
+
+From `DC_PAK3.DEP`, read size-dependent factors per respiratory region.  
+Find the bin whose aerosol diameter is closest to the input value and extract one size factor for each of the nine regions. 
+
+### 4. Read region-specific organ dose coefficients
+
+For each of the nine respiratory regions, look up the line in the corresponding HDB file that matches the nuclide, age, and intake type, and read the target organ coefficients. 
+
+### 5. Apply aerosol scaling and combine regions
+
+For each target organ, multiply the region’s organ coefficient by that region’s aerosol size factor and sum over all nine regions. This gives one aerosol-adjusted coefficient per organ. 
+
+### 6. Handle gonad weighting
+
+Use the target-organ coefficient for gonads with the appropriate tissue weighting factor contribution in the total effective dose calculation. 
+
+### 7. Compute remainder tissues contribution
+
+For organs classified as remainder tissues, compute the weighted contribution using the remainder tissue masses and the corresponding tissue weighting factors. 
+
+### 8. Sum to total effective dose
+
+Combine the regular-organ contributions and the remainder-tissues contribution to produce the total effective dose. 
+
+### Table 1. Tissue weighting factors by age
+<img width="685" height="673" alt="image" src="https://github.com/user-attachments/assets/ca697d2b-4b7a-44ab-9284-eed34c51e5e6" />
