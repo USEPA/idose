@@ -1,16 +1,18 @@
 
-# Purpose/Overview
+# IDOSE version 0.1-alpha
+
+## Purpose/Overview
 
 The code IDOSE estimates organ-specific inhalation dose coefficients for a selected radionuclide, age, and lung absorption type adjusted for a given aerosol particle size. Total effective dose is calculated as a combination of target organ dose and tissue weighting factors (ICRP 60). The total effective dose includes regular target organs and an estimate of dose from a group of remainder tissues. Dose is adjusted for aerosol particle size deposition in multiple regions of the respiratory tract, which affects different target organs. 
 
-## User provided input
+### User provided input
 
 - Radionuclide (e.g., Sr-85)
 - Lung absorption type (fast/medium/slow absorption: F/M/S)
 - Age in days (e.g., 7300 ≈ adult)
 - Aerosol aerodynamic diameter (default is 1.0 µm) 
 
-## Standard program inputs
+### Standard program inputs
 
 - Tissue weighting factors for organs (`namelist_regular.txt`)
 - Organ masses for the “remainder tissues” calculation (`namelist_remainder.txt`)
@@ -26,12 +28,12 @@ The code IDOSE estimates organ-specific inhalation dose coefficients for a selec
   - `ET1.HDB`
   - `ET2.HDB` 
 
-## Outputs
+### Outputs
 
-- A table of target organ inhalation dose coefficients
+- A table of target organ inhalation dose coefficients (format for use with CAP88)
 - A table of nuclide-specific inhalation total effective dose for the fast, medium, and slow lung absorption types 
 
-# Inhalation dose calculation approach
+## Inhalation dose calculation approach
 
 ### 1. Initialize and select inputs
 
